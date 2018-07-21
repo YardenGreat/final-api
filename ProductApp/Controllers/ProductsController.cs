@@ -4,6 +4,14 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Web.Http;
+using System.Runtime.Serialization;
+using System.Runtime.Serialization.Json;
+using System.IO;
+using System.Text;
+using Newtonsoft.Json;
+using System.Web;
+using System.Web.SessionState;
+using System.Runtime.Caching;
 
 namespace ProductsApp.Controllers
 {
@@ -11,12 +19,16 @@ namespace ProductsApp.Controllers
     [RoutePrefix("api/products")]
     public class ProductsController : ApiController
     {
-        Product[] products = new Product[]
+        const string PRODUCTS_FILE = @"C:\Users\Yarden\Source\Repos\ProductApp\ProductApp\Products.json";
+        /*Product[] products = new Product[]
         {
-            new Product { Id = 1, Name = "Tomato Soup", Category = "Groceries", Price = 1 },
-            new Product { Id = 2, Name = "Yo-yo", Category = "Toys", Price = 3.75M },
-            new Product { Id = 3, Name = "Hammer", Category = "Hardware", Price = 16.99M }
-        };
+            new Product (1, "Tomato Soup", "Groceries", 1 ),
+            new Product (2, "Yo-yo", "Toys", 3.75 ),
+            new Product (3, "Hammer", "Hardware", 16.99 )
+        };*/
+
+        // Initialized here to guarantee that 'products' will be cached and not reset after each http request
+        Product[] products = ReadProductsFromFile();
 
         // Web api would know to address all incoming http 'get' requests
         // (that refer to the default controller URL '/api/products') to this action
@@ -24,6 +36,17 @@ namespace ProductsApp.Controllers
         [Route("")]
         public IEnumerable<Product> GetAllProducts()
         {
+            /*Product.WriteArrayToFile(products);
+
+            return null;*/
+            /*if (HttpContext.Current.Session?["products"] == null)
+            {
+                
+                this.ReadProductsFromFile();
+            }
+
+            products = HttpContext.Current.Session["products"] as Product[];*/
+
             return products;
         }
 
@@ -32,11 +55,49 @@ namespace ProductsApp.Controllers
         public IHttpActionResult GetProduct(int id)
         {
             var product = products.FirstOrDefault((p) => p.Id == id);
+
             if (product == null)
             {
                 return NotFound();
             }
+
             return Ok(product);
+        }
+
+        [HttpPost]
+        [Route("addProduct")]
+        public IHttpActionResult AddProduct([FromBody]Product product)
+        { 
+            if (!this.isNewProductValid(product))
+            {
+                return BadRequest();
+            }
+
+            products = products.Concat(new[] { product }).ToArray();
+            Product.WriteArrayToFile(products);
+            return Ok();
+        }
+
+        private static Product[] ReadProductsFromFile()
+        {
+            using (StreamReader reader = new StreamReader(PRODUCTS_FILE))
+            {
+                return JsonConvert.DeserializeObject<Product[]>(reader.ReadToEnd());
+            }
+        }
+
+        private bool isNewProductValid(Product product)
+        {
+            int id;
+
+            if (product?.Id == null || product.Name == null || product.Category == null || !int.TryParse(product.Id.ToString(), out id))
+            {
+                return false;
+            }
+
+            product.Id = id;
+           
+            return true;
         }
     }
 }

@@ -25,6 +25,44 @@
         <input type="button" value="Search" onclick="findCustomer();" />
         <p id="customer" />
     </div>
+    <div>
+        <h2>Here the form will be</h2>
+        <input type="text" id="prodAdd" size="5" />
+        <input type="button" value="Add" onclick="addProduct();" />
+        <p id="customer" />
+    </div>
+    <div>
+        <form id="form1" onsubmit="addProduct()">
+            <div>
+                <label for="Id">Id</label>
+            </div>
+            <div>
+                <input id="newProdId" name="Id" type="text" />
+            </div>
+            <div>
+                <label for="Name">Name</label>
+            </div>
+            <div>
+                <input id="prodName" name="Name" type="text" />
+            </div>
+            <div>
+                <label for="Category">Category</label>
+            </div>
+            <div>
+                <input id="prodCategory" name="Category" type="text" />
+            </div>
+            <div>
+                <label for="Price">Price</label>
+            </div>
+            <div>
+                <input id="prodPrice" name="Price" type="text" />
+            </div>
+            <div>
+
+                <input type="submit" value="Submit" />
+            </div>
+        </form>
+    </div>
 
     <script src="https://ajax.aspnetcdn.com/ajax/jQuery/jquery-2.0.3.min.js"></script>
     <script>
@@ -84,6 +122,32 @@
                 $('#product').text('Error: ' + err);
                 
             });
+        }
+
+        function addProduct() {
+            var id = $("#newProdId").val();
+            var name = $("#prodName").val();
+            var category = $("#prodCategory").val();
+            var price = $("#prodPrice").val();
+            var requestData = { Id: id, Name: name, Category: category, Price: price };
+            // var requestData = { id: 4, Name: 'firstName', Category: 'lastName', Price: 5 };
+            // var requestData = $("#form1");
+            $.ajax({
+                url: productUri + '/addProduct',
+                type: 'post',
+                contentType: 'application/json',
+                data: JSON.stringify(requestData),
+                success: function () {
+                    alert("Success");
+                },
+                error: function () {
+                    alert("Error");
+                }
+            });
+
+            // location.reload(true);
+            // $.post(productUri + '/addProduct', { Id: id, Name: name, Category: category, Price: price }, function () {
+            //}).done(location.reload(true)).fail(alert("There was an error"));
         }
     </script>
 </body>
